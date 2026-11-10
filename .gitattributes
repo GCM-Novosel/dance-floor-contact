@@ -1,0 +1,5 @@
+# Preserve the bytes used by the frozen experiment fingerprints.
+Experiment/** -text
+*.mp4 binary
+*.png binary
+*.pt binary
