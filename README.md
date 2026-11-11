@@ -4,6 +4,10 @@ Open [Master_Notebook.ipynb](Master_Notebook.ipynb) for the team walkthrough and
 
 The published baseline localized 29 of 46 visible contacts within 3% of mat width. The 200-image revision localized 26 of 46 and reported fewer hidden contacts as measured (3 of 50 versus 5 of 50). The 0.30 replay is the team demo. Formation detection is pending.
 
+## Offline Windows labeler
+
+Floor Contact Labeler edits dancer boxes, support points, and floor guides without a CVAT account. See the [quick start and build instructions](annotator/README.md).
+
 ## Open the notebooks
 
 Use Python 3.12. Extract the team ZIP or open this clone. From the project folder in PowerShell:
