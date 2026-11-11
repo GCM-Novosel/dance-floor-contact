@@ -3,3 +3,5 @@ build/
 __pycache__/
 .ipynb_checkpoints/
 *.pyc
+
+/Experiment/lighting_expansion_200/training_input/

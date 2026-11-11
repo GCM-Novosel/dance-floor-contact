@@ -1,48 +1,38 @@
 # Dance floor contact
 
-Open **Labeling_Guide.ipynb** to review the draft CVAT annotations. Open **Research_Notebook.ipynb** to see the experiments, their outputs, and why we chose the current pipeline. The final end-to-end notebook will follow after human review and retraining.
+Open [Master_Notebook.ipynb](Master_Notebook.ipynb) for the team walkthrough and [Research_Notebook.ipynb](Research_Notebook.ipynb) for the experiments, CVAT examples, training results, and display sweep. [Labeling_Guide.ipynb](Labeling_Guide.ipynb) covers the earlier A/B/C review tasks.
+
+The published baseline localized 29 of 46 visible contacts within 3% of mat width. The 200-image revision localized 26 of 46 and reported fewer hidden contacts as measured (3 of 50 versus 5 of 50). The 0.30 replay is the team demo. Formation detection is pending.
 
 ## Open the notebooks
 
-Use Python 3.12. Download the complete ZIP from [Releases](https://github.com/GCM-Novosel/dance-floor-contact/releases/latest) for the simplest setup. A regular Git clone also includes the videos, PNGs and weights.
-
-Windows PowerShell, from this folder:
+Use Python 3.12. Extract the team ZIP or open this clone. From the project folder in PowerShell:
 
     python -m venv .venv
     .\.venv\Scripts\python.exe -m pip install -r requirements-notebooks.txt
     .\.venv\Scripts\python.exe -m jupyterlab
 
-On macOS/Linux, use .venv/bin/python in place of the Windows executable. Select the Python 3 kernel from this environment and use **Run All Cells**. For a non-interactive check, run the same Python with tools/run_notebooks.py. The notebooks run on CPU and do not start training.
+On macOS or Linux, use .venv/bin/python. Select the Python 3 kernel from that environment. The notebooks include saved outputs and can be run on CPU. Run tools/run_notebooks.py to execute all three without opening JupyterLab.
 
-## What is included
+## Team demo and training data
 
-- media/source_choreography.mp4: original video.
-- Experiment/Dance_Project_Shared/dataset/frames: 71 lossless review images and seven separate confirmation images.
-- Experiment/Dance_Overnight/CVAT_Review: A/B/C starter XML, task schema, frame lists and checklist. The labeling notebook creates the three image ZIPs under build/cvat.
-- Experiment/Dance_Overnight: stage comparisons, frozen experiment results, selected weights, code and caches used to reproduce the final map fit.
-- tools/extract_frames.py: regenerate any source frame range with OpenCV. By default it writes all 2,424 static-camera frames to a new build folder.
+- [0.30 replay MP4](Experiment/lighting_expansion_200/runs/lighting_200_visual_s17/display_threshold_0.3/lighting_trial_replay.mp4) and [per-frame map positions](Experiment/lighting_expansion_200/runs/lighting_200_visual_s17/display_threshold_0.3/map_positions.json)
+- [200 training PNGs](Experiment/lighting_expansion_200/frames), [exact training manifest](Experiment/lighting_expansion_200/visual_relabel/training_manifest.json), and [CVAT export](Experiment/lighting_expansion_200/visual_relabel/cvat_visual_revision_export.zip). The original 11 validation PNGs are included under Experiment/Dance_Project_Shared/dataset/frames.
+- [Annotation and training report](Experiment/lighting_expansion_200/visual_relabel/RESULTS.md), [CVAT transfer check](Experiment/lighting_expansion_200/visual_relabel/cvat_roundtrip_check.json), [frozen comparison](Experiment/lighting_expansion_200/runs/lighting_200_visual_s17/evaluation/results.json), and [threshold metrics](Experiment/lighting_expansion_200/runs/lighting_200_visual_s17/display_sweep.json)
+- [Validation-selected checkpoint](Experiment/lighting_expansion_200/runs/lighting_200_visual_s17/best_joint.pt), [training history](Experiment/lighting_expansion_200/runs/lighting_200_visual_s17/history.json), and [original choreography video](media/source_choreography.mp4)
 
-## After CVAT review
+The labels are approximate assistant visual estimates. The CVAT check verifies transfer. The four uncertain labels were excluded from training crops.
 
-Place A.xml, B.xml and C.xml in build/. From Experiment/Dance_Overnight, with the notebook environment active:
+## Reproduce the results
 
-    python code/import_cvat_review.py ../../build/A.xml ../../build/A.json
-    python code/import_cvat_review.py ../../build/B.xml ../../build/B.json
-    python code/import_cvat_review.py ../../build/C.xml ../../build/C.json
-    python code/merge_review_exports.py ../../build/combined.json ../../build/A.json ../../build/B.json ../../build/C.json
-    python code/prepare_reviewed_training.py ../../build/combined.json ../../build/team_review.json --reviewer "Reviewer names and date"
+Use the separate Python 3.12 ML environment described in [the training report](Experiment/lighting_expansion_200/visual_relabel/RESULTS.md) and [the ML requirements](Experiment/Dance_Overnight/requirements.txt). Use CUDA-enabled PyTorch for GPU training and fresh checkpoint inference. From the project folder, the cached predictions can be used to recompute the display metrics and render 0.30:
 
-The converter checks IDs, point/status consistency and split membership. Keep the seven confirmation images outside training.
+    python Experiment/lighting_expansion_200/measure_display_sweep.py
+    python Experiment/lighting_expansion_200/render_contact_threshold.py --threshold 0.30
 
-## Reproduce or retrain
+To reproduce the published baseline from cached data:
 
-Use a separate Python 3.12 ML environment with the packages in Experiment/Dance_Overnight/requirements.txt. For training, use a CUDA-enabled PyTorch build for your GPU. The original versions are in environment.json. Training may fetch pretrained ResNet weights.
-
-From Experiment/Dance_Overnight with that ML environment active:
-
+    cd Experiment/Dance_Overnight
     python code/reproduce_latest.py --output ../../build/reproduction
-    python code/retrain_selected.py --variant expanded --manifest ../../build/team_review.json --name team_review_v1 --seed 17
 
-The first command refits and scores the map from saved detector/tracker and support predictions; it does not rerun detection. It should reproduce 29 of 46 visible contacts within 3% of mat width. The second trains the support model on the reviewed revision. Use a new output/run name for later runs. Earlier experiment code is included for reference; only the selected pipeline's assets and the notebook evidence are bundled.
-
-For the source video extraction, run python tools/extract_frames.py from the project folder using the ML environment.
+Use [tools/extract_frames.py](tools/extract_frames.py) to extract other frames from the source video. The seven reserved confirmation images stay outside training.
