@@ -3,3 +3,4 @@ Experiment/** -text
 *.mp4 binary
 *.png binary
 *.pt binary
+*.exe binary
